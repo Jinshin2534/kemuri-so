@@ -55,3 +55,26 @@ describe('kNN尤度', () => {
     for (const v of Object.values(l)) expect(v).toBeCloseTo(1 / BRANDS.length, 10);
   });
 });
+
+describe('平滑化のスケール', () => {
+  // 他人同士の顔ベクトルは距離が1前後になる。そのくらい離れたレコードでも、
+  // 数がまとまれば手元のデータとして声を持たなければならない。
+  // 平滑化を固定値にすると、ここが永遠に一様分布のままになる。
+  it('距離1くらいのレコードが60件あれば、その銘柄が明確に高くなる', () => {
+    const far = Array.from({ length: 60 }, (_, i) => {
+      const v = new Array(128).fill(0);
+      for (let d = 0; d < 128; d++) v[d] = ((i * 7 + d * 13) % 17) / 100 - 0.08;
+      return { brandId: 'wakaba', face: { descriptor: v } };
+    });
+    const l = likelihood(new Array(128).fill(0), far);
+    const others = Object.entries(l).filter(([id]) => id !== 'wakaba').map(([, v]) => v);
+    expect(l.wakaba).toBeGreaterThan(Math.max(...others) * 5);
+  });
+
+  it('1件しかないときは言い切らない', () => {
+    const v = new Array(128).fill(0);
+    for (let d = 0; d < 128; d++) v[d] = 0.09;
+    const l = likelihood(new Array(128).fill(0), [{ brandId: 'wakaba', face: { descriptor: v } }]);
+    expect(l.wakaba).toBeLessThan(0.5);
+  });
+});

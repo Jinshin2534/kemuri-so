@@ -25,10 +25,10 @@ describe('文章化', () => {
     expect(e.headline).toContain(CATEGORY_LABELS[top.category]);
   });
 
-  it('内訳に統計と顔の両方が入る', () => {
+  it('内訳に統計と手元データの両方が入る', () => {
     const e = explain(infer({ face: face(), records: [] }), face());
     expect(e.breakdown).toContain('統計');
-    expect(e.breakdown).toContain('顔');
+    expect(e.breakdown).toContain('手元のデータ');
   });
 
   it('登録0件なら「顔は効いていない」と明言する', () => {

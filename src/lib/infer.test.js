@@ -40,9 +40,9 @@ describe('推論の合成', () => {
     }
   });
 
-  it('登録0件のとき顔の寄与は0、統計の寄与は1', () => {
+  it('登録0件のとき手元データの寄与は0、統計の寄与は1', () => {
     const r = infer({ face: face(), records: [] });
-    expect(r.contribution.face).toBeCloseTo(0, 12);
+    expect(r.contribution.data).toBeCloseTo(0, 12);
     expect(r.contribution.stats).toBeCloseTo(1, 12);
   });
 
@@ -55,8 +55,8 @@ describe('推論の合成', () => {
   it('寄与率は合計1で、どちらも0以上', () => {
     const records = Array.from({ length: 30 }, (_, i) => rec('wakaba', 0.001 * i));
     const r = infer({ face: face(), records });
-    expect(r.contribution.face + r.contribution.stats).toBeCloseTo(1, 10);
-    expect(r.contribution.face).toBeGreaterThan(0);
+    expect(r.contribution.data + r.contribution.stats).toBeCloseTo(1, 10);
+    expect(r.contribution.data).toBeGreaterThan(0);
     expect(r.contribution.stats).toBeGreaterThanOrEqual(0);
   });
 

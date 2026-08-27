@@ -1,10 +1,17 @@
 // 登録済みレコードの顔ベクトルとの距離から、銘柄ごとの尤度を作る。
 //
-//   score(銘柄) = Σ exp(-d² / 2σ²)     … 近いレコードほど強く効く
-//   L(銘柄)     = (score + α) / Σ(score + α)   … ラプラス平滑化で0を作らない
+//   score(銘柄) = Σ exp(-d² / 2σ²)          … 近いレコードほど強く効く
+//   αeff        = α·√(1 + Σscore) / 銘柄数   … 平滑化で0を作らない
+//   L(銘柄)     = (score + αeff) / Σ(score + αeff)
 //
-// 登録0件なら全銘柄が α になるので、結果は一様分布になる。これは意図した動作で、
-// infer 側で「顔はまだ効いていない」状態として扱われる。
+// 平滑化を固定値にしてはいけない。face-api の顔ベクトルは他人同士だと距離が1前後になり、
+// exp(-1/2σ²) は 0.02 程度にしかならない。固定 α=0.5 を26銘柄ぶん足すと合計13になり、
+// 手元のデータの声（合計1前後）が完全に飲まれてしまう。
+// 実際、60件登録しても事後分布がほとんど動かないという形で表に出た。
+//
+// √ にしているのは、証拠が増えるほど平滑化を緩めつつ、
+// 「1件しかないのに言い切る」ことも防ぐため。
+// 登録0件なら Σscore=0 で全銘柄が同じ値になり、結果は一様分布になる。
 
 import { BRANDS } from './brands.js';
 
@@ -32,13 +39,19 @@ export function likelihood(descriptor, records, config = {}) {
     score[r.brandId] += Math.exp(-(d * d) / twoSigmaSq);
   }
 
+  let evidence = 0;
+  for (const id of Object.keys(score)) evidence += score[id];
+
+  const ids = Object.keys(score);
+  const alphaEff = (alpha * Math.sqrt(1 + evidence)) / ids.length;
+
   let total = 0;
-  for (const id of Object.keys(score)) {
-    score[id] += alpha;
+  for (const id of ids) {
+    score[id] += alphaEff;
     total += score[id];
   }
 
   const out = {};
-  for (const id of Object.keys(score)) out[id] = score[id] / total;
+  for (const id of ids) out[id] = score[id] / total;
   return out;
 }

@@ -3,7 +3,7 @@
 import { el, clear } from './dom.js';
 import { renderBrandPicker } from './brandPicker.js';
 import { renderCapture } from './capture.js';
-import { analyzeWithProgress } from './analyze.js';
+import { analyzeWithProgress, preloadModels } from './analyze.js';
 import { makeRecord } from '../lib/record.js';
 import { putRecord } from '../db/store.js';
 
@@ -59,10 +59,13 @@ export function renderRegisterFlow({ onSaved, onCancel }) {
 
   function showCapture() {
     clear(node);
+    const prep = el('p', { class: 'hint', text: '' });
     node.append(
       renderCapture({ onCaptured: run, label: 'この顔を登録する' }),
+      prep,
       el('button', { text: 'やめる', onClick: () => onCancel?.() }),
     );
+    preloadModels(prep);
   }
 
   async function run({ canvas, dataUrl }) {

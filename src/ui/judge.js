@@ -1,6 +1,6 @@
 import { el, clear } from './dom.js';
 import { renderCapture } from './capture.js';
-import { analyzeWithProgress } from './analyze.js';
+import { analyzeWithProgress, preloadModels } from './analyze.js';
 import { renderRegisterForm } from './register.js';
 import { allRecords } from '../db/store.js';
 import { infer } from '../lib/infer.js';
@@ -41,10 +41,14 @@ export async function renderJudge() {
 
   function showCapture() {
     clear(slot);
+    const prep = el('p', { class: 'hint', text: '' });
     slot.append(
       el('p', { class: 'lead', text: '顔を撮ると、吸っていそうな銘柄を上位3つ返します。写真は端末の外に出ません。' }),
       renderCapture({ onCaptured: run }),
+      prep,
     );
+    // カメラに顔を合わせているあいだに読み込みを済ませておく
+    preloadModels(prep);
   }
 
   function showError(msg) {

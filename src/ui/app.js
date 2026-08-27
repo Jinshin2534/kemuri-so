@@ -1,5 +1,6 @@
 import { mount, el } from './dom.js';
 import { isGatePassed, renderGate } from './gate.js';
+import { loadSeedOnce } from './data.js';
 
 const routes = new Map();
 export const state = {};
@@ -56,5 +57,5 @@ async function render() {
 export function start() {
   window.addEventListener('hashchange', render);
   window.__app = { ...(window.__app ?? {}), go, state, render };
-  render();
+  loadSeedOnce().then(() => render());
 }

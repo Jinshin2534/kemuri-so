@@ -1,6 +1,9 @@
 // 判定結果を日本語にする。
 // 判定そのものは infer で確定しているので、ここは言い換えるだけ。
 // 「今回どれだけ統計に頼ったか」を必ず出すのがこのモジュールの役目。
+//
+// 内訳を「顔」ではなく「手元のデータ」と書くのは、分布を動かしているのが
+// 顔の近さだけではなく、登録の銘柄の偏りでもあるため。
 
 import { getBrand, CATEGORY_LABELS } from './brands.js';
 import { AGE_BAND_LABELS } from './stats.js';
@@ -51,7 +54,7 @@ export function explain(result, face) {
 
   return {
     headline: `${topBrand.name}（${CATEGORY_LABELS[topBrand.category]}）`,
-    breakdown: `統計 ${formatPercent(result.contribution.stats)} ／ 顔 ${formatPercent(result.contribution.face)}`,
+    breakdown: `統計 ${formatPercent(result.contribution.stats)} ／ 手元のデータ ${formatPercent(result.contribution.data)}`,
     reasons,
     notes,
   };

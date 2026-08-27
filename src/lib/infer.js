@@ -7,6 +7,10 @@
 //
 // contribution は「事前分布からどれだけ動いたか」を total variation distance で測ったもの。
 // これを画面に出すことで、判定がまだ統計頼みであることを隠さずに済む。
+//
+// 名前を data にしているのは、動かしているのが「顔の近さ」だけではないから。
+// 手元のレコードが特定の銘柄に偏っていれば、顔が似ていなくても分布は動く。
+// それを「顔が◯%効いた」と書くのは言い過ぎになる。
 
 import { buildPrior } from './prior.js';
 import { likelihood } from './knn.js';
@@ -38,7 +42,7 @@ export function infer({ face, records = [], config = {} }) {
 
   let tv = 0;
   for (const id of Object.keys(prior)) tv += Math.abs(posterior[id] - prior[id]);
-  const faceContribution = tv / 2;
+  const dataContribution = tv / 2;
 
   const top = Object.entries(posterior)
     .map(([brandId, p]) => ({ brandId, p }))
@@ -52,6 +56,6 @@ export function infer({ face, records = [], config = {} }) {
     top,
     n,
     w,
-    contribution: { face: faceContribution, stats: 1 - faceContribution },
+    contribution: { data: dataContribution, stats: 1 - dataContribution },
   };
 }
