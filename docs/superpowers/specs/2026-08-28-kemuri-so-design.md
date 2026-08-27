@@ -195,11 +195,12 @@ statsContribution = 1 - faceContribution
 - リトルシガー
 - VAPE / 電子
 
-各銘柄は `{ id, name, maker, category, tarLevel, share }` を持つ。
+各銘柄は `{ id, name, maker, category, tarBand, weight }` を持つ。
 
-- `tarLevel`: タール量（mg）。加熱式・VAPE は `null`
-- `share`: 全喫煙者に占める推定シェア。`stats.js` と同じく `{ value, source, estimated }` の形で持ち、
-  出典が取れた銘柄は実データ、取れないものは推定値として明示する。全銘柄の `value` の総和を1に正規化して使う
+- `tarBand`: タールの重さを `'light' | 'mid' | 'heavy'` の3段階で持つ。加熱式・VAPE は `null`。
+  正確なmg値は製品改訂で変わり、古い値を書くと嘘になるため段階で持つ
+- `weight`: **同一カテゴリ内での**相対的な人気度。カテゴリ間のシェアは `stats.js` の `CATEGORY_SHARE` が持ち、
+  そちらに出典をつける。銘柄単位のシェアは公開されていないため `weight` は推定値であり、その旨を画面に出す
 **ロゴやパッケージ画像は一切使わない。** テキストと色帯のみで表現する。
 
 ## 10. クイズ仕様
