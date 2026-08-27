@@ -56,7 +56,7 @@ src/
     brands.js       銘柄マスタ
     stats.js        公開統計テーブル（1数値ごとに出典と推定フラグ）
     prior.js        年代×性別 → 銘柄の事前分布
-    knn.js          コサイン/ユークリッド距離の加重投票 → 尤度
+    knn.js          ユークリッド距離の加重投票 → 尤度
     infer.js        事前分布 × 尤度^w の合成
     explain.js      判定内訳（統計 x% / 顔 y%）と根拠テキスト
     quiz.js         出題生成・採点
@@ -93,6 +93,7 @@ score(b) = Σ_{i: b_i = b} exp(-d_i² / (2σ²))
 L(b)     = (score(b) + α) / Σ_b' (score(b') + α)      // ラプラス平滑化
 ```
 
+- 距離 `d_i` はユークリッド距離を使う（face-api の descriptor はこれを前提に学習されている）
 - `σ` は距離のスケール定数（face-api の同一人物判定閾値0.6を目安に 0.35 から調整）
 - `α` は平滑化定数。登録が偏っていても尤度が0にならないようにする
 - 登録0件のとき `L` は一様分布になる（実装として保証し、テストで確認する）
@@ -189,7 +190,11 @@ statsContribution = 1 - faceContribution
 - リトルシガー
 - VAPE / 電子
 
-各銘柄は `{ id, name, maker, category, tarLevel, shareHint }` を持つ。
+各銘柄は `{ id, name, maker, category, tarLevel, share }` を持つ。
+
+- `tarLevel`: タール量（mg）。加熱式・VAPE は `null`
+- `share`: 全喫煙者に占める推定シェア。`stats.js` と同じく `{ value, source, estimated }` の形で持ち、
+  出典が取れた銘柄は実データ、取れないものは推定値として明示する。全銘柄の `value` の総和を1に正規化して使う
 **ロゴやパッケージ画像は一切使わない。** テキストと色帯のみで表現する。
 
 ## 10. クイズ仕様
