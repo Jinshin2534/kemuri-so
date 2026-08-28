@@ -17,14 +17,21 @@ let loadShouldFail = false;
 let setBackendShouldFail = false;
 const tfCalls = [];
 
-function net(name) {
+const warmCalls = [];
+
+function net(name, extra = {}) {
   return {
     loadFromUri: vi.fn(async (uri) => {
       if (loadShouldFail) throw new Error('network down');
       loadCalls.push(`${name}:${uri}`);
     }),
+    ...extra,
   };
 }
+
+const warms = (name) => vi.fn(async () => {
+  warmCalls.push(name);
+});
 
 const chain = () => {
   const c = {
@@ -39,9 +46,9 @@ const chain = () => {
 vi.mock('@vladmandic/face-api', () => ({
   nets: {
     tinyFaceDetector: net('tinyFaceDetector'),
-    faceLandmark68Net: net('faceLandmark68Net'),
-    ageGenderNet: net('ageGenderNet'),
-    faceRecognitionNet: net('faceRecognitionNet'),
+    faceLandmark68Net: net('faceLandmark68Net', { detectLandmarks: warms('landmarks') }),
+    ageGenderNet: net('ageGenderNet', { predictAgeAndGender: warms('ageGender') }),
+    faceRecognitionNet: net('faceRecognitionNet', { computeFaceDescriptor: warms('descriptor') }),
   },
   tf: {
     setBackend: vi.fn(async (b) => {
@@ -69,6 +76,7 @@ async function freshDetector() {
   loadCalls.length = 0;
   detectCalls.length = 0;
   tfCalls.length = 0;
+  warmCalls.length = 0;
   return import('./detector.js');
 }
 
@@ -129,6 +137,15 @@ describe('モデルの読み込み', () => {
     await det.loadModels();
     expect(detectCalls.length).toBe(1);
     expect(detectCalls[0]).toMatchObject({ w: 320, h: 320 });
+  });
+
+  it('ウォームアップで重い3つのネットを全部通す', async () => {
+    // 検出チェーンだけを空打ちすると、顔の無い画像では検出時点で短絡し、
+    // landmark / age-gender / descriptor が一度もコンパイルされない。
+    // それだと撮影後に12秒待たされるので、各ネットを直接叩いていることを縛る。
+    const det = await freshDetector();
+    await det.loadModels();
+    expect(warmCalls).toEqual(['landmarks', 'ageGender', 'descriptor']);
   });
 
   it('失敗したら reject し、次回はやり直せる', async () => {

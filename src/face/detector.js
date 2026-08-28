@@ -16,11 +16,17 @@ function detectorOptions() {
   return new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 });
 }
 
-// 初回の推論は WebGL のシェーダをコンパイルするぶん極端に重い。
+// 初回の推論は WebGL のシェーダをコンパイルするぶん極端に重い（実測12.7秒）。
 // 撮影ボタンを押したあとにそれを食らうと待たされ方がつらいので、
-// 読み込みのうちに一度空打ちして済ませておく。
+// 読み込みのうちに空打ちして済ませておく。
+//
+// ここで detectSingleFace().withFaceLandmarks()... のチェーンを使ってはいけない。
+// 顔の無い画像だと検出の時点で短絡し、重い3つのネット
+// (landmark / age-gender / descriptor) が一度もコンパイルされないまま
+// 「ウォームアップ済み」になってしまう。実際それで12.7秒が撮影後に残っていた。
+// なので各ネットを直接叩く。これらは顔検出を通さず、渡した画像をそのまま食う。
 async function warmup() {
-  // ウォームアップは最後まで best-effort。ここで投げると読み込み全体が巻き添えで失敗し、
+  // 最後まで best-effort。ここで投げると読み込み全体が巻き添えで失敗し、
   // 「モデルは読めているのに判定に入れない」という一番たちの悪い壊れ方をする。
   // 2Dコンテキストが取れない環境（キャンバス非対応）もあるので、その場合は黙って諦める。
   try {
@@ -32,11 +38,10 @@ async function warmup() {
       ctx.fillStyle = '#808080';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    await faceapi
-      .detectSingleFace(canvas, detectorOptions())
-      .withFaceLandmarks()
-      .withAgeAndGender()
-      .withFaceDescriptor();
+    await faceapi.detectSingleFace(canvas, detectorOptions());
+    await faceapi.nets.faceLandmark68Net.detectLandmarks(canvas);
+    await faceapi.nets.ageGenderNet.predictAgeAndGender(canvas);
+    await faceapi.nets.faceRecognitionNet.computeFaceDescriptor(canvas);
   } catch {
     // 本番の推論でエラーを出せばよい
   }
