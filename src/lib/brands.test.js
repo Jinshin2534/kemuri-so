@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { BRANDS, CATEGORIES, CATEGORY_LABELS, getBrand, brandsByCategory } from './brands.js';
 
 describe('銘柄マスタ', () => {
-  it('26件ある', () => {
-    expect(BRANDS.length).toBe(26);
+  it('29件ある', () => {
+    expect(BRANDS.length).toBe(29);
   });
 
   it('IDが重複していない', () => {
@@ -49,5 +49,11 @@ describe('銘柄マスタ', () => {
   it('getBrand はIDで引ける／無ければ undefined', () => {
     expect(getBrand('mevius').name).toBe('メビウス');
     expect(getBrand('nonexistent')).toBeUndefined();
+  });
+
+  it('上位20銘柄の重みが実シェアの順になっている（メビウス > セブンスター > キャメル）', () => {
+    expect(getBrand('mevius').weight).toBeGreaterThan(getBrand('seven-stars').weight);
+    expect(getBrand('seven-stars').weight).toBeGreaterThan(getBrand('camel').weight);
+    expect(getBrand('camel').weight).toBeGreaterThan(getBrand('marlboro').weight);
   });
 });

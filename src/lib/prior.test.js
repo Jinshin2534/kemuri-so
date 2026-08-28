@@ -11,10 +11,11 @@ describe('事前分布', () => {
     expect(ageBandOf(35)).toBe('30s');
     expect(ageBandOf(49)).toBe('40s');
     expect(ageBandOf(50)).toBe('50s');
-    expect(ageBandOf(72)).toBe('60s+');
+    expect(ageBandOf(65)).toBe('60s');
+    expect(ageBandOf(72)).toBe('70s+');
   });
 
-  it('全26銘柄をキーに持ち、合計が1になる', () => {
+  it('全銘柄をキーに持ち、合計が1になる', () => {
     const p = buildPrior({ age: 40, gender: 'male' });
     expect(Object.keys(p).length).toBe(BRANDS.length);
     expect(sum(p)).toBeCloseTo(1, 6);
@@ -60,7 +61,16 @@ describe('事前分布', () => {
 
   it('喫煙率の補足を年代・性別つきで返す', () => {
     const r = smokingRateFor({ age: 45, gender: 'male' });
-    expect(r.value).toBeGreaterThan(0.2);
+    expect(r.value).toBeCloseTo(0.334, 3); // 令和5年 国民健康・栄養調査の実数
+    expect(r.estimated).toBe(false);
     expect(r.source).toBeTruthy();
+  });
+
+  it('喫煙率は40代男性が最も高く、70歳以上女性が最も低い（実データの形）', () => {
+    const peak = smokingRateFor({ age: 45, gender: 'male' }).value;
+    for (const [age, gender] of [[25, 'male'], [75, 'male'], [45, 'female'], [25, 'female']]) {
+      expect(smokingRateFor({ age, gender }).value).toBeLessThan(peak);
+    }
+    expect(smokingRateFor({ age: 75, gender: 'female' }).value).toBeLessThan(0.05);
   });
 });

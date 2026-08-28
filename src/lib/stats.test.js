@@ -43,7 +43,7 @@ describe('統計テーブル', () => {
   it('加熱式は若い年代ほど係数が大きい', () => {
     const h = CATEGORY_AGE_SKEW.heated;
     expect(h['20s'].value).toBeGreaterThan(h['40s'].value);
-    expect(h['40s'].value).toBeGreaterThan(h['60s+'].value);
+    expect(h['40s'].value).toBeGreaterThan(h['70s+'].value);
   });
 
   it('全年代帯に日本語ラベルがある', () => {
@@ -53,6 +53,22 @@ describe('統計テーブル', () => {
   it('喫煙率は男性のほうが女性より高い（令和5年調査の実データ）', () => {
     expect(SMOKING_RATE.male.value).toBeGreaterThan(SMOKING_RATE.female.value);
     expect(SMOKING_RATE.male.estimated).toBe(false);
+  });
+
+  it('年代別の喫煙率はすべて実データで、推定が混じっていない', () => {
+    for (const band of AGE_BANDS) {
+      expect(SMOKING_RATE.byBand[band].male.estimated).toBe(false);
+      expect(SMOKING_RATE.byBand[band].female.estimated).toBe(false);
+    }
+  });
+
+  it('年代帯は厚労省の表と同じ6区分', () => {
+    expect(AGE_BANDS).toEqual(['20s', '30s', '40s', '50s', '60s', '70s+']);
+  });
+
+  it('加熱式とリトルシガーのシェアは販売実績からの実データ', () => {
+    expect(CATEGORY_SHARE.heated.estimated).toBe(false);
+    expect(CATEGORY_SHARE.littlecigar.estimated).toBe(false);
   });
 
   it('出典一覧にURLがある', () => {

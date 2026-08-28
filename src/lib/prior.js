@@ -16,7 +16,8 @@ export function ageBandOf(age) {
   if (age < 40) return '30s';
   if (age < 50) return '40s';
   if (age < 60) return '50s';
-  return '60s+';
+  if (age < 70) return '60s';
+  return '70s+';
 }
 
 function genderSkew(category, gender) {

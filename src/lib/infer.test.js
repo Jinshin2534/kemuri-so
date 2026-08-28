@@ -46,7 +46,7 @@ describe('推論の合成', () => {
     expect(r.contribution.stats).toBeCloseTo(1, 12);
   });
 
-  it('事後分布は全26銘柄を持ち、合計が1', () => {
+  it('事後分布は全銘柄を持ち、合計が1', () => {
     const r = infer({ face: face(), records: [rec('mevius', 0.01)] });
     expect(Object.keys(r.posterior).length).toBe(BRANDS.length);
     expect(sum(r.posterior)).toBeCloseTo(1, 10);
