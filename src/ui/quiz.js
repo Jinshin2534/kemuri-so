@@ -204,7 +204,8 @@ export async function renderQuiz() {
     }
 
     showQuestion();
-    window.__app.quiz = { questions, ai, answer, showScore };
+    // 検証用の覗き口。main.js が __app を用意していない状況でも本編を壊さない。
+    window.__app = { ...(window.__app ?? {}), quiz: { questions, ai, answer, showScore } };
   }
 
   menu();

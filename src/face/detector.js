@@ -20,20 +20,25 @@ function detectorOptions() {
 // 撮影ボタンを押したあとにそれを食らうと待たされ方がつらいので、
 // 読み込みのうちに一度空打ちして済ませておく。
 async function warmup() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 320;
-  canvas.height = 320;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#808080';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // ウォームアップは最後まで best-effort。ここで投げると読み込み全体が巻き添えで失敗し、
+  // 「モデルは読めているのに判定に入れない」という一番たちの悪い壊れ方をする。
+  // 2Dコンテキストが取れない環境（キャンバス非対応）もあるので、その場合は黙って諦める。
   try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 320;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     await faceapi
       .detectSingleFace(canvas, detectorOptions())
       .withFaceLandmarks()
       .withAgeAndGender()
       .withFaceDescriptor();
   } catch {
-    // ウォームアップの失敗は致命的ではない。本番の推論でエラーを出せばよい。
+    // 本番の推論でエラーを出せばよい
   }
 }
 

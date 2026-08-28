@@ -26,20 +26,6 @@ export function renderCapture({ onCaptured, label = 'この顔で判定する' }
     stream = null;
   };
 
-  navigator.mediaDevices
-    ?.getUserMedia({ video: { facingMode: 'user' } })
-    .then((s) => {
-      stream = s;
-      video.srcObject = s;
-      shoot.removeAttribute('disabled');
-      status.textContent = '顔が正面に写るようにして、ボタンを押してください。';
-    })
-    .catch(() => {
-      status.textContent = 'カメラが使えませんでした。下から写真を選んでください。';
-      video.remove();
-      shoot.remove();
-    });
-
   shoot.addEventListener('click', () => {
     const canvas = drawToCanvas(video, video.videoWidth, video.videoHeight);
     stop();
@@ -71,5 +57,30 @@ export function renderCapture({ onCaptured, label = 'この顔で判定する' }
     el('label', { class: 'filelabel' }, '写真から選ぶ', file),
   );
   node.stopCamera = stop;
+
+  // カメラを諦めて写真選択に一本化する。
+  // https でない、権限を断られた、そもそも mediaDevices が無い、のどれでもここに来る。
+  const fallback = () => {
+    status.textContent = 'カメラが使えませんでした。下から写真を選んでください。';
+    video.remove();
+    shoot.remove();
+  };
+
+  if (navigator.mediaDevices?.getUserMedia) {
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'user' } })
+      .then((s) => {
+        stream = s;
+        video.srcObject = s;
+        shoot.removeAttribute('disabled');
+        status.textContent = '顔が正面に写るようにして、ボタンを押してください。';
+      })
+      .catch(fallback);
+  } else {
+    // mediaDevices が無い場合、上の分岐に入らないまま
+    // 「カメラを準備しています…」で固まってしまうので、その場で落とす。
+    fallback();
+  }
+
   return node;
 }

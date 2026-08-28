@@ -78,7 +78,8 @@ export async function renderJudge() {
         }),
       );
       slot.append(el('button', { text: 'もう一度撮る', onClick: showCapture }));
-      window.__app.lastResult = { result, face };
+      // 検証用の覗き口。__app が無くても本編を壊さない。
+      window.__app = { ...(window.__app ?? {}), lastResult: { result, face } };
     } catch (err) {
       showError(`解析に失敗しました: ${err.message}`);
     }
